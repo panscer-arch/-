@@ -1,1 +1,10 @@
 .letta/
+node_modules/
+.next/
+dist/
+.turbo/
+.DS_Store
+.env
+.env.local
+.env.*.local
+runtime/

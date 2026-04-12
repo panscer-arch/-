@@ -1,0 +1,291 @@
+:root {
+  --bg: #f3efe7;
+  --surface: rgba(255, 255, 255, 0.86);
+  --surface-strong: #ffffff;
+  --text: #182126;
+  --muted: #5e6a72;
+  --line: rgba(24, 33, 38, 0.08);
+  --accent: #157a6e;
+  --accent-soft: rgba(21, 122, 110, 0.12);
+  --gold: #b8860b;
+  --shadow: 0 18px 50px rgba(24, 33, 38, 0.08);
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-sm: 999px;
+  --max-width: 1280px;
+  --font-ui: "Avenir Next", "Segoe UI", sans-serif;
+  --font-display: "Iowan Old Style", "Georgia", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(21, 122, 110, 0.1), transparent 30%),
+    linear-gradient(180deg, #f7f2e9 0%, #f1ede4 100%);
+  font-family: var(--font-ui);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+main {
+  width: min(var(--max-width), calc(100vw - 32px));
+  margin: 0 auto;
+}
+
+.lc-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  width: min(var(--max-width), calc(100vw - 32px));
+  margin: 24px auto 48px;
+}
+
+.lc-sidebar,
+.lc-topbar,
+.lc-surface {
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.lc-sidebar {
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  position: sticky;
+  top: 24px;
+  align-self: start;
+}
+
+.lc-logo {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.lc-muted {
+  color: var(--muted);
+}
+
+.lc-kicker {
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.73rem;
+  margin: 0 0 8px;
+}
+
+.lc-nav {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.lc-nav a {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.lc-nav a:hover,
+.lc-nav a[data-active="true"] {
+  background: var(--accent-soft);
+  border-color: rgba(21, 122, 110, 0.16);
+}
+
+.lc-content {
+  display: grid;
+  gap: 20px;
+}
+
+.lc-topbar {
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lc-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.lc-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.lc-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.lc-surface {
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.lc-surface h1,
+.lc-surface h2,
+.lc-surface h3,
+.lc-hero h1 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+}
+
+.lc-hero {
+  padding: 80px 0 40px;
+}
+
+.lc-hero-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.lc-hero h1 {
+  font-size: clamp(3rem, 7vw, 5.8rem);
+  line-height: 0.94;
+  max-width: 10ch;
+}
+
+.lc-actions,
+.lc-card-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lc-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+}
+
+.lc-button.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.lc-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.lc-stat-tile h3 {
+  font-size: 2rem;
+}
+
+.lc-rule-list,
+.lc-entry-list,
+.lc-feed-list,
+.lc-achievement-list,
+.lc-notification-list {
+  display: grid;
+  gap: 16px;
+}
+
+.lc-rule-card,
+.lc-entry-card,
+.lc-feed-card,
+.lc-notification-card {
+  display: grid;
+  gap: 14px;
+}
+
+.lc-section-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.lc-form {
+  display: grid;
+  gap: 14px;
+}
+
+.lc-form input,
+.lc-form textarea,
+.lc-form select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.88);
+  font: inherit;
+}
+
+.lc-auth-wrap {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.lc-auth-card {
+  width: min(560px, 100%);
+}
+
+.lc-mobile-nav {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .lc-shell,
+  .lc-hero-grid,
+  .lc-grid.two,
+  .lc-grid.three {
+    grid-template-columns: 1fr;
+  }
+
+  .lc-sidebar {
+    position: static;
+  }
+
+  .lc-mobile-nav {
+    position: sticky;
+    bottom: 16px;
+    display: flex;
+    gap: 8px;
+    overflow: auto;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    width: min(calc(100vw - 32px), 640px);
+    margin: 0 auto 24px;
+    backdrop-filter: blur(12px);
+  }
+
+  .lc-mobile-nav a {
+    white-space: nowrap;
+    padding: 10px 12px;
+  }
+}
