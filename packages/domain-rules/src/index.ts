@@ -1,8 +1,18 @@
 import type { Rule } from "@lifecoding/shared-types";
 
+export interface RuleCategorySummary {
+  slug: string;
+  label: string;
+  count: number;
+}
+
 export interface RulesContract {
   listRules(): Promise<Rule[]>;
   getRuleBySlug(slug: string): Promise<Rule | null>;
+  listCategories(): Promise<RuleCategorySummary[]>;
+  listRulesByCategory(categorySlug: string): Promise<Rule[]>;
+  listRecentRules(limit?: number): Promise<Rule[]>;
+  listRecommendedRules(limit?: number): Promise<Rule[]>;
 }
 
 export const mockRules: Rule[] = [
@@ -95,11 +105,48 @@ export const mockRules: Rule[] = [
   }
 ];
 
+function slugifyCategory(value: string) {
+  return value.trim().toLowerCase();
+}
+
 export const rulesService: RulesContract = {
   async listRules() {
     return mockRules;
   },
   async getRuleBySlug(slug) {
     return mockRules.find((rule) => rule.slug === slug) ?? null;
+  },
+  async listCategories() {
+    const categoryMap = new Map<string, RuleCategorySummary>();
+
+    mockRules.forEach((rule) => {
+      rule.categories.forEach((category) => {
+        const slug = slugifyCategory(category);
+        const current = categoryMap.get(slug);
+
+        if (current) {
+          current.count += 1;
+          return;
+        }
+
+        categoryMap.set(slug, {
+          slug,
+          label: category,
+          count: 1
+        });
+      });
+    });
+
+    return Array.from(categoryMap.values()).sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
+  },
+  async listRulesByCategory(categorySlug) {
+    const normalizedCategory = slugifyCategory(categorySlug);
+    return mockRules.filter((rule) => rule.categories.some((category) => slugifyCategory(category) === normalizedCategory));
+  },
+  async listRecentRules(limit = 3) {
+    return mockRules.slice(0, limit);
+  },
+  async listRecommendedRules(limit = 2) {
+    return mockRules.slice(1, 1 + limit);
   }
 };

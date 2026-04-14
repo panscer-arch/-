@@ -242,6 +242,26 @@ main {
   font: inherit;
 }
 
+.lc-library-search {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lc-library-search input {
+  flex: 1 1 280px;
+}
+
+.lc-pill.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.lc-featured-rule {
+  display: grid;
+  gap: 16px;
+}
+
 .lc-auth-wrap {
   min-height: 100vh;
   display: grid;

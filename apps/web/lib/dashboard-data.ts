@@ -16,10 +16,10 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     throw new Error("No current user.");
   }
 
-  const [profile, allRules, progress, diaryEntries, posts, achievements, notifications, recommendations] =
+  const [profile, recentRules, progress, diaryEntries, posts, achievements, notifications, recommendations] =
     await Promise.all([
       profileService.getProfile(user.id),
-      rulesService.listRules(),
+      rulesService.listRecentRules(2),
       progressService.listByUser(user.id),
       diaryService.listByUser(user.id),
       feedService.listFeed(),
@@ -31,8 +31,6 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
   const progressPercent = Math.round(
     (progress.reduce((acc, item) => acc + item.progressPercent, 0) / (progress.length || 1))
   );
-
-  const recentRules = allRules.slice(0, 2);
 
   return {
     profile,
