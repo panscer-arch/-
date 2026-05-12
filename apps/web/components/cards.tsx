@@ -1,154 +1,137 @@
-import Link from "next/link";
-import { Pill, SectionHeader, StatTile, Surface } from "@lifecoding/ui";
-import type { Achievement, AppNotification, DiaryEntry, FeedPost, Rule } from "@lifecoding/shared-types";
+import { Pill, SectionHeader, Surface } from "@lifecoding/ui";
+import type {
+  CopyBannerFocusItem,
+  CopyBannerKpi,
+  CopyBannerMarketingNote,
+  CopyBannerQueueItem
+} from "../lib/dashboard-data";
 
-export function HeroCard() {
+export function HeroCard({
+  projectName,
+  stage,
+  health,
+  summary,
+  lastUpdate,
+  priority
+}: {
+  projectName: string;
+  stage: string;
+  health: string;
+  summary: string;
+  lastUpdate: string;
+  priority: string;
+}) {
   return (
-    <Surface>
-      <p className="lc-kicker">System State</p>
-      <h2>Кабинет собран как конструктор</h2>
-      <p className="lc-muted">
-        Каждый блок изолирован контрактами и может быть включён, отключён или вынесен в отдельный сервис позже.
-      </p>
-      <div className="lc-actions">
-        <Link className="lc-button primary" href="/app/library">
-          Открыть библиотеку
-        </Link>
-        <Link className="lc-button" href="/app/diary">
-          Перейти в дневник
-        </Link>
+    <Surface className="lc-control-hero">
+      <div className="lc-control-hero-copy">
+        <p className="lc-kicker">Центр управления</p>
+        <h2>{projectName} - операционная панель</h2>
+        <p className="lc-muted">{summary}</p>
+        <div className="lc-actions">
+          <Pill>{stage}</Pill>
+          <Pill>{health}</Pill>
+        </div>
+      </div>
+      <div className="lc-control-hero-meta">
+        <div className="lc-overview-grid">
+          <div>
+            <p className="lc-kicker">Статус</p>
+            <h3>Активен</h3>
+            <p className="lc-muted">{health}</p>
+          </div>
+          <div>
+            <p className="lc-kicker">Последний срез</p>
+            <h3>{lastUpdate}</h3>
+            <p className="lc-muted">Последний срез панели</p>
+          </div>
+        </div>
+        <div className="lc-priority-note">
+          <p className="lc-kicker">Текущий приоритет</p>
+          <p>{priority}</p>
+        </div>
       </div>
     </Surface>
   );
 }
 
-export function StatsRow({
-  level,
-  xp,
-  rules,
-  achievements
-}: {
-  level: number;
-  xp: number;
-  rules: number;
-  achievements: number;
-}) {
+export function KpiRow({ items }: { items: CopyBannerKpi[] }) {
   return (
-    <div className="lc-grid three">
-      <StatTile label="Current level" value={`L${level}`} helper="Текущий уровень пользователя" />
-      <StatTile label="XP" value={xp} helper="Опыт за изучение и применение" />
-      <StatTile label="Completed" value={rules} helper={`${achievements} достижений уже получено`} />
+    <div className="lc-grid lc-kpi-grid">
+      {items.map((item) => (
+        <article key={item.label} className="lc-kpi-panel">
+          <div className="lc-kpi-head">
+            <p className="lc-kicker">{item.label}</p>
+            <span className={`lc-signal is-${item.tone}`}>{item.delta}</span>
+          </div>
+          <h3>{item.value}</h3>
+          <p className="lc-muted">{item.helper}</p>
+        </article>
+      ))}
     </div>
   );
 }
 
-export function RulesSection({ title, description, rules }: { title: string; description: string; rules: Rule[] }) {
+export function IntakeSection({ items }: { items: CopyBannerQueueItem[] }) {
   return (
     <Surface>
-      <SectionHeader title={title} description={description} />
-      <div className="lc-rule-list">
-        {rules.map((rule) => (
-          <article key={rule.id} className="lc-rule-card">
-            <div className="lc-actions">
-              <Pill>{rule.contentType}</Pill>
-              <Pill>{rule.difficulty}</Pill>
-            </div>
-            <div>
-              <h3>{rule.title}</h3>
-              <p className="lc-muted">{rule.summary}</p>
-            </div>
-            <div className="lc-actions">
-              {rule.tags.map((tag) => (
-                <Pill key={tag}>{tag}</Pill>
-              ))}
-            </div>
-            <div className="lc-card-actions">
-              <Link className="lc-button primary" href={`/app/library/${rule.slug}`}>
-                Open rule
-              </Link>
-              <button className="lc-button">Favorite</button>
-            </div>
-          </article>
-        ))}
-      </div>
-    </Surface>
-  );
-}
-
-export function DiarySection({ entries }: { entries: DiaryEntry[] }) {
-  return (
-    <Surface>
-      <SectionHeader title="Recent diary entries" description="Наблюдения, выводы и результаты применения." />
-      <div className="lc-entry-list">
-        {entries.map((entry) => (
-          <article key={entry.id} className="lc-entry-card">
-            <div className="lc-actions">
-              <Pill>{entry.format}</Pill>
-              <Pill>{entry.privacy}</Pill>
-            </div>
-            <div>
-              <h3>{entry.title}</h3>
-              <p className="lc-muted">{entry.body}</p>
-            </div>
-            <p className="lc-muted">{new Date(entry.createdAt).toLocaleString("ru-RU")}</p>
-          </article>
-        ))}
-      </div>
-    </Surface>
-  );
-}
-
-export function FeedSection({ posts }: { posts: FeedPost[] }) {
-  return (
-    <Surface>
-      <SectionHeader title="Community activity" description="Общая лента подключена как отдельный модуль." />
-      <div className="lc-feed-list">
-        {posts.map((post) => (
-          <article key={post.id} className="lc-feed-card">
-            <div className="lc-actions">
-              <Pill>{post.authorName}</Pill>
-              <Pill>{`L${post.authorLevel}`}</Pill>
-              <Pill>{`${post.authorAchievements} achievements`}</Pill>
-            </div>
-            <p>{post.body}</p>
-            <p className="lc-muted">{post.likes} likes • {post.comments} comments</p>
-          </article>
-        ))}
-      </div>
-    </Surface>
-  );
-}
-
-export function AchievementsSection({ items }: { items: Achievement[] }) {
-  return (
-    <Surface>
-      <SectionHeader title="Fresh achievements" description="Геймификация подключена отдельным доменным пакетом." />
-      <div className="lc-achievement-list">
+      <SectionHeader
+        title="Новые заявки и входящий поток"
+        description="То, что нужно быстро посмотреть и не потерять."
+      />
+      <div className="lc-stack-list">
         {items.map((item) => (
-          <article key={item.id}>
-            <h3>{item.title}</h3>
-            <p className="lc-muted">{item.description}</p>
-            <p className="lc-kicker">{`+${item.xpReward} XP`}</p>
-          </article>
-        ))}
-      </div>
-    </Surface>
-  );
-}
-
-export function NotificationsSection({ items }: { items: AppNotification[] }) {
-  return (
-    <Surface>
-      <SectionHeader title="Notification center" description="События читаются из отдельного notification domain." />
-      <div className="lc-notification-list">
-        {items.map((item) => (
-          <article key={item.id} className="lc-notification-card">
-            <div className="lc-actions">
-              <Pill>{item.type}</Pill>
-              <Pill>{item.isRead ? "read" : "new"}</Pill>
+          <article key={item.id} className="lc-stack-card">
+            <div className="lc-row-meta">
+              <span className="lc-row-lane">{item.lane}</span>
+              <Pill>{item.status}</Pill>
             </div>
             <h3>{item.title}</h3>
-            <p className="lc-muted">{item.body}</p>
+            <p className="lc-muted">{item.detail}</p>
+          </article>
+        ))}
+      </div>
+    </Surface>
+  );
+}
+
+export function FocusSection({ items }: { items: CopyBannerFocusItem[] }) {
+  return (
+    <Surface>
+      <SectionHeader
+        title="Ближайший фокус"
+        description="Сюда будем потихоньку превращать твои реальные задачи и доработки."
+      />
+      <div className="lc-stack-list">
+        {items.map((item) => (
+          <article key={item.id} className="lc-focus-card">
+            <div>
+              <p className="lc-kicker">{item.lane}</p>
+              <h3>{item.title}</h3>
+              <p className="lc-muted">{item.owner}</p>
+            </div>
+            <Pill>{item.eta}</Pill>
+          </article>
+        ))}
+      </div>
+    </Surface>
+  );
+}
+
+export function MarketingSection({ items }: { items: CopyBannerMarketingNote[] }) {
+  return (
+    <Surface>
+      <SectionHeader
+        title="Маркетинг"
+        description="Пока оставляем как отдельный смысловой блок и потом вместе детализируем."
+      />
+      <div className="lc-stack-list">
+        {items.map((item) => (
+          <article key={item.id} className="lc-stack-card">
+            <div className="lc-row-meta">
+              <span className="lc-row-lane">{item.signal}</span>
+            </div>
+            <h3>{item.title}</h3>
+            <p className="lc-muted">{item.detail}</p>
           </article>
         ))}
       </div>

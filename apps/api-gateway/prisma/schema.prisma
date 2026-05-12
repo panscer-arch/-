@@ -1,0 +1,347 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WalletRole {
+  user
+  creator
+  treasury
+  platform
+}
+
+enum OrderStatus {
+  active
+  matured
+  partially_claimed
+  fully_claimed
+  closed
+  cancelled
+}
+
+enum ObligationType {
+  user_cycle_payout
+  referral_payout
+  platform_fee
+  claimable_now
+  accrued_not_claimed
+}
+
+model User {
+  id          String   @id
+  displayName String?
+  country     String?
+  city        String?
+  createdAt   DateTime @default(now())
+  wallets     Wallet[]
+  orders      Order[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id          String              @id
+  address     String              @unique
+  role        WalletRole
+  network     String
+  ownerType   String?
+  userId      String?
+  createdAt   DateTime            @default(now())
+  user        User?               @relation(fields: [userId], references: [id])
+  orders      Order[]
+  snapshots   WalletBalanceDaily[]
+
+  @@map("wallets")
+}
+
+model Product {
+  id          String         @id
+  slug        String         @unique
+  name        String
+  cycles      ProductCycle[]
+  orders      Order[]
+
+  @@map("products")
+}
+
+model ProductCycle {
+  id               String   @id
+  productId        String
+  code             String   @unique
+  durationDays     Int?
+  payoutRate       Decimal? @db.Decimal(18, 6)
+  payoutRateDaily  Decimal? @db.Decimal(18, 6)
+  product          Product  @relation(fields: [productId], references: [id])
+
+  @@map("product_cycles")
+}
+
+model Order {
+  id                  String      @id
+  userId              String
+  walletId            String
+  productId           String
+  cycleCode           String?
+  depositAmount       Decimal     @db.Decimal(18, 2)
+  createdAt           DateTime
+  maturesAt           DateTime?
+  expectedPayoutTotal Decimal     @db.Decimal(18, 2)
+  paidAmount          Decimal     @db.Decimal(18, 2) @default(0)
+  remainingAmount     Decimal     @db.Decimal(18, 2)
+  claimableNow        Decimal     @db.Decimal(18, 2) @default(0)
+  accruedLater        Decimal     @db.Decimal(18, 2) @default(0)
+  status              OrderStatus
+  user                User        @relation(fields: [userId], references: [id])
+  wallet              Wallet      @relation(fields: [walletId], references: [id])
+  product             Product     @relation(fields: [productId], references: [id])
+  obligations         DailyObligation[]
+
+  @@map("orders")
+}
+
+model DailyCashPosition {
+  id                 String   @id
+  date               DateTime @unique
+  openingBalance     Decimal  @db.Decimal(18, 2)
+  incomingFact       Decimal  @db.Decimal(18, 2)
+  outgoingFact       Decimal  @db.Decimal(18, 2)
+  closingBalance     Decimal  @db.Decimal(18, 2)
+  availableCash      Decimal  @db.Decimal(18, 2)
+  reservedForPayouts Decimal  @db.Decimal(18, 2)
+  createdAt          DateTime @default(now())
+
+  @@map("analytics_daily_cash_position")
+}
+
+model DailyObligation {
+  id             String         @id
+  date           DateTime
+  productSlug    String?
+  cycleCode      String?
+  walletAddress  String?
+  orderId        String?
+  obligationType ObligationType
+  amount         Decimal        @db.Decimal(18, 2)
+  status         String
+  order          Order?         @relation(fields: [orderId], references: [id])
+
+  @@index([date])
+  @@map("analytics_daily_obligations")
+}
+
+model PlanFactInflowDaily {
+  id                    String   @id
+  date                  DateTime
+  source                String
+  country               String?
+  leader                String?
+  productSlug           String?
+  plan                  Decimal  @db.Decimal(18, 2)
+  fact                  Decimal  @db.Decimal(18, 2)
+  gap                   Decimal  @db.Decimal(18, 2)
+  carryForwardDeficit   Decimal  @db.Decimal(18, 2)
+  requiredTargetNextDay Decimal  @db.Decimal(18, 2)
+
+  @@index([date, source])
+  @@map("analytics_plan_fact_inflow_daily")
+}
+
+model WalletBalanceDaily {
+  id                 String     @id
+  date               DateTime
+  walletId           String
+  balance            Decimal    @db.Decimal(18, 2)
+  inflow             Decimal    @db.Decimal(18, 2)
+  outflow            Decimal    @db.Decimal(18, 2)
+  claimable          Decimal    @db.Decimal(18, 2)
+  accrued            Decimal    @db.Decimal(18, 2)
+  linkedObligations  Decimal    @db.Decimal(18, 2)
+  claimPressure      Decimal    @db.Decimal(18, 2)
+  obligationLoad     Decimal    @db.Decimal(18, 2)
+  riskScore          Decimal    @db.Decimal(18, 2)
+  activityScore      Decimal    @db.Decimal(18, 2)
+  netContribution    Decimal    @db.Decimal(18, 2)
+  concentrationShare Decimal    @db.Decimal(18, 2)
+  reinvestFlow       Decimal    @db.Decimal(18, 2) @default(0)
+  wallet             Wallet     @relation(fields: [walletId], references: [id])
+
+  @@index([date, walletId])
+  @@map("analytics_wallet_daily")
+}
+
+model PartnerBranchDaily {
+  id                   String   @id
+  date                 DateTime
+  partnerId            String
+  branch               String
+  leader               String
+  generatedInflow      Decimal  @db.Decimal(18, 2)
+  referralAccrual      Decimal  @db.Decimal(18, 2)
+  referralPaid         Decimal  @db.Decimal(18, 2)
+  downlineObligations  Decimal  @db.Decimal(18, 2)
+  netContribution      Decimal  @db.Decimal(18, 2)
+  structuralLeak       Decimal  @db.Decimal(18, 2)
+  leaderDependency     Decimal  @db.Decimal(18, 2)
+  conversionToDeposit  Decimal  @db.Decimal(18, 2)
+  depthScore           Decimal  @db.Decimal(18, 2)
+  activeInvited        Int
+  depositingInvited    Int
+
+  @@index([date, branch])
+  @@map("analytics_partner_branch_daily")
+}
+
+model ReinvestDaily {
+  id                   String   @id
+  date                 DateTime
+  source               String
+  country              String?
+  claimUsers           Int
+  reinvestUsers        Int
+  userRate             Decimal  @db.Decimal(18, 2)
+  claimedCapital       Decimal  @db.Decimal(18, 2)
+  reinvestedCapital    Decimal  @db.Decimal(18, 2)
+  capitalRate          Decimal  @db.Decimal(18, 2)
+  averageDaysToReinvest Decimal @db.Decimal(18, 2)
+
+  @@index([date, source])
+  @@map("analytics_reinvest_daily")
+}
+
+model CountryDaily {
+  id             String   @id
+  date           DateTime
+  country        String
+  city           String?
+  users          Int
+  wallets        Int
+  inflow         Decimal  @db.Decimal(18, 2)
+  obligations    Decimal  @db.Decimal(18, 2)
+  deposits       Decimal  @db.Decimal(18, 2)
+  activeUsers    Int
+  activeRate     Decimal  @db.Decimal(18, 2)
+  newUsers       Int
+  repeatUsers    Int
+  repeatRate     Decimal  @db.Decimal(18, 2)
+  reinvestUsers  Int
+  reinvestRate   Decimal  @db.Decimal(18, 2)
+  payingUsers    Int
+  payingRate     Decimal  @db.Decimal(18, 2)
+  claimUsers     Int
+  claimRate      Decimal  @db.Decimal(18, 2)
+  riskScore      Decimal  @db.Decimal(18, 2)
+  growthScore    Decimal  @db.Decimal(18, 2)
+  obligationLoad Decimal  @db.Decimal(18, 2)
+
+  @@index([date, country])
+  @@map("analytics_country_daily")
+}
+
+model LeaderParticipationDaily {
+  id              String   @id
+  date            DateTime
+  leader          String
+  country         String?
+  investment      Decimal  @db.Decimal(18, 2)
+  cycles          Int
+  activeDays      Int
+  obligations     Decimal  @db.Decimal(18, 2)
+  referralIncome  Decimal  @db.Decimal(18, 2)
+  netContribution Decimal  @db.Decimal(18, 2)
+  reinvestRate    Decimal  @db.Decimal(18, 2)
+  retentionRate   Decimal  @db.Decimal(18, 2)
+  claimRate       Decimal  @db.Decimal(18, 2)
+
+  @@index([date, leader])
+  @@map("analytics_leader_participation_daily")
+}
+
+model LeaderAttractionDaily {
+  id                String   @id
+  date              DateTime
+  leader            String
+  country           String?
+  invited           Int
+  activeInvited     Int
+  depositingInvited Int
+  inflow            Decimal  @db.Decimal(18, 2)
+  referralLoad      Decimal  @db.Decimal(18, 2)
+  leaderDependency  Decimal  @db.Decimal(18, 2)
+  baseRetention     Decimal  @db.Decimal(18, 2)
+  reinvestRate      Decimal  @db.Decimal(18, 2)
+  claimPressure     Decimal  @db.Decimal(18, 2)
+  netContribution   Decimal  @db.Decimal(18, 2)
+
+  @@index([date, leader])
+  @@map("analytics_leader_attraction_daily")
+}
+
+model TrafficDaily {
+  id                    String   @id
+  date                  DateTime
+  source                String
+  country               String?
+  siteOnline            Int
+  cabinetOnline         Int
+  sessionsToday         Int
+  authorizedToday       Int
+  walletConnects        Int
+  depositStarts         Int
+  newVisitors           Int
+  repeatVisitors        Int
+  engagedUsers          Int
+  averageSessionMinutes Decimal  @db.Decimal(18, 2)
+  bounceRate            Decimal  @db.Decimal(18, 2)
+  depositConversion     Decimal  @db.Decimal(18, 2)
+  qualityScore          Decimal  @db.Decimal(18, 2)
+
+  @@index([date, source])
+  @@map("analytics_traffic_daily")
+}
+
+model BaseCompositionDaily {
+  id                   String   @id
+  date                 DateTime
+  segment              String
+  users                Int
+  share                Decimal  @db.Decimal(18, 2)
+  inflow               Decimal  @db.Decimal(18, 2)
+  obligations          Decimal  @db.Decimal(18, 2)
+  referralShare        Decimal  @db.Decimal(18, 2)
+  repeatRate           Decimal  @db.Decimal(18, 2)
+  claimPressure        Decimal  @db.Decimal(18, 2)
+  avgDeposit           Decimal  @db.Decimal(18, 2)
+  netContribution      Decimal  @db.Decimal(18, 2)
+  activeUsers          Int
+  sleepingUsers        Int
+  newUsers             Int
+  repeatUsers          Int
+  payingUsers          Int
+  nonPayingUsers       Int
+  claimUsers           Int
+  noClaimUsers         Int
+  referralIncomeUsers  Int
+  noReferralIncomeUsers Int
+  reinvestUsers        Int
+  reinvestRate         Decimal  @db.Decimal(18, 2)
+  reactivatedUsers     Int
+  reactivatedRate      Decimal  @db.Decimal(18, 2)
+  churnedUsers         Int
+  churnRate            Decimal  @db.Decimal(18, 2)
+  dormantUsers         Int
+  dormantRate          Decimal  @db.Decimal(18, 2)
+  largeUsers           Int
+  mediumUsers          Int
+  smallUsers           Int
+  largeInflow          Decimal  @db.Decimal(18, 2)
+  mediumInflow         Decimal  @db.Decimal(18, 2)
+  smallInflow          Decimal  @db.Decimal(18, 2)
+  mixedRoleConversion  Decimal  @db.Decimal(18, 2)
+
+  @@index([date, segment])
+  @@map("analytics_base_composition_daily")
+}

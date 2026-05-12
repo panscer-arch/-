@@ -3,6 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node src/index.js"
+    "dev": "node src/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "seed:phase1": "node scripts/seed-phase1.js",
+    "db:phase1": "npm run prisma:push && npm run seed:phase1",
+    "check:phase1": "node scripts/check-phase1.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.8.2"
+  },
+  "devDependencies": {
+    "prisma": "^6.8.2"
   }
 }
